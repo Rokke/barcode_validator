@@ -1,18 +1,16 @@
 import 'package:barcode_validator/barrel.dart';
-import 'package:barcode_validator/models/barcode_config_model.dart';
 import 'package:barcode_validator/screens/settings_screen.dart';
-import 'package:barcode_validator/services/application_config.dart';
-import 'package:barcode_validator/widgets/barcode_list_validator.dart';
-import 'package:barcode_validator/widgets/barcode_read_widget.dart';
+import 'package:barcode_validator/widgets/barcode_validator_pageview.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends ConsumerWidget {
   HomeScreen({Key? key}) : super(key: key);
-  final notifierLastBarcodeScan = ValueNotifier<ScanResult?>(null);
+  final notifierLastBarcodeScan = ValueNotifier<BarcodeFormatModel?>(kDebugMode ? BarcodeFormatModel(barcodeFormatEnum: BarcodeFormatEnum.code128, data: '00234567890123456789') : null);
 
-  _onScan(ScanResult result) {
+  _onScan(BarcodeFormatModel result) {
     debugPrint('_onScan($result)');
-    debugPrint('result: ${result.format}, ${result.formatNote}, ${result.rawContent}, ${result.type}');
+    debugPrint('result: ${result.barcodeFormatEnum}, ${result.data}');
     notifierLastBarcodeScan.value = result;
   }
 
@@ -21,26 +19,42 @@ class HomeScreen extends ConsumerWidget {
     final appConfig = ref.watch(providerApplicationConfig);
     final barcodeConfigs = ref.read(providerBarcodeConfig);
     // final selectedBarcodeConfigIndex = ref.watch(providerSelectedBarcodeConfig);
-    final _pageController = PageController(initialPage: appConfig.lastSavedIndex, viewportFraction: barcodeConfigs.length > 1 ? 0.8 : 1);
-    debugPrint('HomeScreen-build - ${appConfig.barcodeModels.length}');
+    final _pageController = PageController(initialPage: appConfig.lastSavedIndex, viewportFraction: barcodeConfigs.length > 1 ? 1 : 1);
+    debugPrint('HomeScreen-build - ${appConfig.barcodeModels.length}->${MediaQuery.of(context).size}'); //392.7, 834.9
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Barcode validator'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Barcode validator'),
+            if (!kDebugMode)
+              Text(
+                'version: ${appConfig.versionName}',
+                style: Theme.of(context).textTheme.caption!.copyWith(color: Colors.white),
+              ),
+          ],
+        ),
         actions: [
           IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsScreen(appConfig))), icon: const Icon(Icons.settings)),
           IconButton(
-              onPressed: () => notifierLastBarcodeScan.value = ScanResult(type: ResultType.Barcode, rawContent: '00345678901234567890', format: BarcodeFormat.code39),
-              icon: const Icon(Icons.bug_report)),
+              onPressed: () => notifierLastBarcodeScan.value = BarcodeFormatModel(barcodeFormatEnum: BarcodeFormatEnum.code128, data: '012345678901234567890123'), icon: const Icon(Icons.bug_report)),
           PopupMenuButton(
             itemBuilder: (context) => barcodeConfigs.barcodeModels
                 .asMap()
                 .entries
                 .map((entry) => PopupMenuItem<int>(
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           if (entry.key == _pageController.initialPage) const Icon(Icons.check, color: Colors.green),
                           const SizedBox(width: 10),
-                          Text(entry.value.name),
+                          Flexible(
+                            child: Text(
+                              entry.value.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                       enabled: entry.key != _pageController.initialPage,
@@ -56,7 +70,7 @@ class HomeScreen extends ConsumerWidget {
           )
         ],
       ),
-      body: ValueListenableBuilder<ScanResult?>(
+      body: ValueListenableBuilder<BarcodeFormatModel?>(
         valueListenable: notifierLastBarcodeScan,
         builder: (context, lastScan, _) => lastScan == null
             ? Center(
@@ -65,29 +79,7 @@ class HomeScreen extends ConsumerWidget {
                   style: Theme.of(context).textTheme.headline3,
                 ),
               )
-            : Column(
-                children: [
-                  BarcodeReadWidget(lastScan),
-                  Flexible(
-                    child: PageView.builder(
-                        onPageChanged: (index) => appConfig.changeLastIndex(index),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: barcodeConfigs.length,
-                        controller: _pageController,
-                        itemBuilder: (context, index) => Container(
-                              color: Theme.of(context).primaryColor.withAlpha(index.isEven ? 100 : 200),
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                                Card(
-                                  color: Theme.of(context).colorScheme.primary.withAlpha(50),
-                                  child: Center(
-                                      child: Text(barcodeConfigs.barcodeModels[index].name, style: Theme.of(context).textTheme.headline6!.copyWith(color: Theme.of(context).colorScheme.onPrimary))),
-                                ),
-                                Flexible(child: BarcodeListValidatorWidget(barcodeConfigs.barcodeModels[index].barcodes, lastScan)),
-                              ]),
-                            )),
-                  ),
-                ],
-              ),
+            : BarcodeValidatorPageViewer(appConfig: appConfig, barcodeConfigs: barcodeConfigs, pageController: _pageController, lastScan: lastScan),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => scanBarcode(_onScan),

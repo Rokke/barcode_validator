@@ -26,7 +26,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
-  Win32Window::Size size(800, 1280);
+  Win32Window::Size size(409, 874);//720, 1080);
   if (!window.CreateAndShow(L"barcode_validator", origin, size)) {
     return EXIT_FAILURE;
   }

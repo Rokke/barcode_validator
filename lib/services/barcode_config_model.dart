@@ -1,8 +1,9 @@
-import 'package:barcode_validator/services/application_config.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:barcode_validator/barrel.dart';
+import 'package:flutter/foundation.dart';
 
 final providerBarcodeConfig = Provider((ref) {
   final appConfig = ref.watch(providerApplicationConfig);
+  debugPrint('providerBarcodeConfigRepository-rebuild');
   return BarcodeConfigRepository(appConfig.barcodeModels);
 });
 // final providerSelectedBarcodeConfig = StateProvider<int>((ref) => -1);
@@ -57,15 +58,23 @@ class BarcodeConfigModel {
     barcodes.addAll(value);
   }
 
+  void replaceBarcodeConfigRegex(int index, BarcodeConfigRegex barcodeConfigRegex) {
+    barcodes.removeAt(index);
+    barcodes.insert(index, barcodeConfigRegex);
+  }
+
   int get length => barcodes.length;
 }
 
 class BarcodeConfigRegex {
   final String name;
-  final List<String> barcodeTypes;
+  final List<BarcodeFormatEnum> barcodeTypes;
   final String regex;
   final int? start, stop;
 
   BarcodeConfigRegex({required this.name, required this.barcodeTypes, required this.regex, required this.start, required this.stop});
+  BarcodeConfigRegex copyWith({String? name, List<BarcodeFormatEnum>? barcodeTypes, String? regex, int? start, int? stop}) =>
+      BarcodeConfigRegex(name: name ?? this.name, barcodeTypes: barcodeTypes ?? this.barcodeTypes, regex: regex ?? this.regex, start: start ?? this.start, stop: stop ?? this.stop);
+  String get regexText => regex.length > 30 ? regex.substring(0, 28) + '...' : regex;
   // String get encode => '$name§$regex§[${barcodeTypes.map((e) => e).join(',')}]§$start§$stop';
 }

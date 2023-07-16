@@ -1,21 +1,23 @@
 import 'dart:convert';
 
-import 'package:barcode_scan2/barcode_scan2.dart';
+import 'package:barcode_validator/barrel.dart';
 import 'package:flutter/material.dart';
 
 class BarcodeReadWidget extends StatelessWidget {
-  final ScanResult scanResult;
-  const BarcodeReadWidget(this.scanResult, {Key? key}) : super(key: key);
+  final BarcodeFormatModel barcodeFormatModel;
+  const BarcodeReadWidget(this.barcodeFormatModel, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    double fontSize = 28;
-    if (scanResult.rawContent.length > 20) {
-      fontSize = 12;
-    } else if (scanResult.rawContent.length > 15) {
-      fontSize = 20;
-    }
-    final textStyle = TextStyle(fontSize: fontSize, color: Theme.of(context).secondaryHeaderColor, fontFamily: 'Terminal');
+    TextStyle textStyle = ((barcodeFormatModel.data.length > 19)
+            ? Theme.of(context).textTheme.headline6
+            : barcodeFormatModel.data.length > 14
+                ? Theme.of(context).textTheme.headline5
+                : Theme.of(context).textTheme.headline4)!
+        .copyWith(fontFamily: 'Terminal');
+    //00345678901234567890
+    // final textStyle = ;
+    final colorRuneBackground = Theme.of(context).colorScheme.primaryContainer;
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -27,12 +29,12 @@ class BarcodeReadWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: Colors.black, width: 1),
-                    color: Theme.of(context).primaryColorDark,
+                    color: Theme.of(context).colorScheme.secondaryContainer,
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(
-                    scanResult.format.toString().toUpperCase(),
-                    style: textStyle.copyWith(fontSize: 20),
+                    barcodeFormatModel.barcodeFormatEnum.formatName,
+                    style: Theme.of(context).textTheme.headline6, //.copyWith(fontSize: 20),
                     textAlign: TextAlign.center,
                   )),
             ),
@@ -41,38 +43,45 @@ class BarcodeReadWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: Colors.black, width: 1),
-                    color: Theme.of(context).primaryColor,
+                    color: Theme.of(context).colorScheme.secondaryContainer,
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(
-                    'Length: ${scanResult.rawContent.length}',
-                    style: textStyle.copyWith(fontSize: 20),
+                    'Length: ${barcodeFormatModel.data.length}',
+                    style: Theme.of(context).textTheme.headline6, //.copyWith(fontSize: 20),
                     textAlign: TextAlign.center,
                   )),
             ),
           ]),
           Container(
+            constraints: const BoxConstraints.expand(height: 50),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: Colors.black, width: 1),
-              color: Theme.of(context).primaryColorDark,
+              color: Theme.of(context).colorScheme.secondaryContainer,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: scanResult.rawContent.runes
-                  .map((e) => Container(
-                      color: Colors.blue,
-                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-                      margin: const EdgeInsets.symmetric(horizontal: 1),
-                      child: Text(
-                        utf8.decode([e]),
-                        style: textStyle,
-                      )))
-                  .toList(),
+            child: Center(
+              child: ListView.builder(
+                shrinkWrap: true,
+                scrollDirection: Axis.horizontal,
+                // mainAxisAlignment: MainAxisAlignment.center,
+                itemBuilder: (context, index) => //barcodeFormatModel.data.runes
+                    Container(
+                        decoration: BoxDecoration(border: Border.all(), color: colorRuneBackground),
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: Center(
+                          child: Text(
+                            utf8.decode([barcodeFormatModel.data.runes.elementAt(index)]),
+                            style: textStyle,
+                            // textAlign: TextAlign.center,
+                          ),
+                        )),
+                itemCount: barcodeFormatModel.data.runes.length,
+              ),
             ),
           ),
-          // Container(color: Colors.purple, child: Text('12345678901234567890', style: textStyle.copyWith(fontSize: 25))),
-          // Container(color: Colors.indigo, child: Text('00000000000000000000', style: textStyle.copyWith(fontSize: 34))),
+          // Container(color: Colors.purple, child: Text('1234567890123456789000000000000000000000', style: textStyle.copyWith(fontSize: 25))),
+          // Container(color: Colors.indigo, child: Text('', style: textStyle.copyWith(fontSize: 34))),
         ], //20*34=400*x   ... 300*x=20*25
       ),
     );
