@@ -35,7 +35,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           builder: (context) => AlertDialog(
                 title: Text(
                   'Discard changes?',
-                  style: Theme.of(context).textTheme.headline6,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
                 content: const Text('There are changes made!\nAre you sure that you want to discard these?'),
                 actions: [
@@ -86,7 +86,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Text(
                                 'Profiles:',
-                                style: Theme.of(context).textTheme.headline6,
+                                style: Theme.of(context).textTheme.titleLarge,
                               ),
                               ActionButtonWidget(
                                 const Icon(Icons.add, color: Colors.white),
@@ -140,7 +140,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 children: [
                                   Text(
                                     'Barcodes:',
-                                    style: Theme.of(context).textTheme.headline6,
+                                    style: Theme.of(context).textTheme.titleLarge,
                                   ),
                                   ActionButtonWidget(
                                     const Icon(Icons.share, color: Colors.white),
@@ -154,7 +154,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                                   height: 300,
                                                   child: Padding(
                                                     padding: const EdgeInsets.all(40.0),
-                                                    child: QrImage(data: SharedPrefBarcodeService.barcodeModelToString(selectedBarcodeConfig)),
+                                                    child: QrImageView(data: SharedPrefBarcodeService.barcodeModelToString(selectedBarcodeConfig)),
                                                   ),
                                                 ),
                                               )));
